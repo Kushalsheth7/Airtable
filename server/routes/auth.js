@@ -25,6 +25,15 @@ function generateCodeChallenge(verifier) {
     .replace(/=/g, '');
 }
 
+// Handle preflight requests
+router.options('/airtable/url', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
+
 // Generate Airtable OAuth URL with PKCE
 router.get('/airtable/url', (req, res) => {
   try {

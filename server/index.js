@@ -23,11 +23,25 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+  origin: function (origin, callback) {
+    const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
+    console.log('🔗 CORS Check - Origin:', origin, 'Allowed:', allowedOrigins);
+
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 };
 app.use(cors(corsOptions));
 
