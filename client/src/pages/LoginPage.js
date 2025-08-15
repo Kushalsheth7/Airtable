@@ -17,10 +17,27 @@ const LoginPage = () => {
   const handleAirtableLogin = async () => {
     try {
       setLoading(true);
-      const { authUrl } = await authService.getAirtableAuthUrl();
+      console.log('Starting login process...');
+
+      const response = await authService.getAirtableAuthUrl();
+      console.log('Auth service response:', response);
+
+      const { authUrl } = response;
+      console.log('Auth URL:', authUrl);
+
+      if (!authUrl) {
+        throw new Error('No auth URL received from server');
+      }
+
+      console.log('Redirecting to:', authUrl);
       window.location.href = authUrl;
     } catch (error) {
       console.error('Login error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       toast.error('Failed to initiate login. Please try again.');
       setLoading(false);
     }
