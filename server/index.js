@@ -25,9 +25,14 @@ app.use(limiter);
 const corsOptions = {
   origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
+
+// Log CORS origins for debugging
+console.log('🔗 CORS Origins:', process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000']);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -40,6 +45,15 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
