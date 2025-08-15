@@ -21,32 +21,18 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
+// CORS configuration - Simplified for production
+const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
+console.log('🔗 CORS Origins:', allowedOrigins);
+
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
-    console.log('🔗 CORS Check - Origin:', origin, 'Allowed:', allowedOrigins);
-
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      console.log('❌ CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins.includes('*') ? true : allowedOrigins,
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 };
 app.use(cors(corsOptions));
-
-// Log CORS origins for debugging
-console.log('🔗 CORS Origins:', process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000']);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
