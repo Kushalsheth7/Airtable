@@ -15,12 +15,14 @@ const LoginPage = () => {
   }
 
   const handleAirtableLogin = async () => {
-    try {
-      setLoading(true);
-      console.log('Starting login process...');
+    setLoading(true);
+    console.log('Starting login process...');
 
+    // First try axios
+    try {
+      console.log('Trying axios request...');
       const response = await authService.getAirtableAuthUrl();
-      console.log('Auth service response:', response);
+      console.log('✅ Axios success - Auth service response:', response);
 
       const { authUrl } = response;
       console.log('Auth URL:', authUrl);
@@ -31,13 +33,39 @@ const LoginPage = () => {
 
       console.log('Redirecting to:', authUrl);
       window.location.href = authUrl;
-    } catch (error) {
-      console.error('Login error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
+      return; // Success, exit function
+    } catch (axiosError) {
+      console.log('❌ Axios failed:', axiosError.message);
+      console.log('Trying direct fetch fallback...');
+    }
+
+    // Fallback to direct fetch
+    try {
+      const directResponse = await fetch('https://airtable-hrcp.onrender.com/api/auth/airtable/url', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
+
+      console.log('Direct fetch response status:', directResponse.status);
+
+      if (!directResponse.ok) {
+        throw new Error(`HTTP ${directResponse.status}: ${directResponse.statusText}`);
+      }
+
+      const data = await directResponse.json();
+      console.log('✅ Direct fetch success - Response data:', data);
+
+      if (!data.authUrl) {
+        throw new Error('No auth URL received from server');
+      }
+
+      console.log('Redirecting to:', data.authUrl);
+      window.location.href = data.authUrl;
+    } catch (fetchError) {
+      console.error('❌ Both axios and fetch failed');
+      console.error('Fetch error:', fetchError);
       toast.error('Failed to initiate login. Please try again.');
       setLoading(false);
     }
